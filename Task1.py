@@ -150,7 +150,9 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 # LOAD DATA   
 @st.cache_data(show_spinner=False)
 def load_all():
-    df = pd.read_csv("train.csv", parse_dates=["date"])
+    from pathlib import Path
+    BASE = Path(__file__).parent
+    df = pd.read_csv(BASE / "train.csv")
     stores = pd.read_csv("stores.csv")
     oil = pd.read_csv("oil.csv", parse_dates=["date"])
     oil["dcoilwtico"] = oil["dcoilwtico"].ffill().bfill()
