@@ -160,7 +160,7 @@ def load_all():
     oil["dcoilwtico"] = (
         oil["dcoilwtico"]
         .ffill()
-        .bfill()
+        .bfill())
     return df, oil, hol, stores
 
 df_all, oil_raw, hol_raw, stores_meta = load_all()
