@@ -148,27 +148,29 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 """, unsafe_allow_html=True)
 
 # LOAD DATA   
+from pathlib import Path
+
 @st.cache_data(show_spinner=False)
 def load_all():
-    from pathlib import Path
+
     BASE = Path(__file__).parent
-    df = pd.read_csv(BASE / "train.csv")
-    stores = pd.read_csv("stores.csv")
-    oil = pd.read_csv("oil.csv", parse_dates=["date"])
+    DATA = BASE / "data"
+    df = pd.read_csv(
+        DATA / "train.csv",
+        parse_dates=["date"]
+    )
+    stores = pd.read_csv(
+        DATA / "stores.csv"
+    )
+    oil = pd.read_csv(
+        DATA / "oil.csv",
+        parse_dates=["date"]
+    )
+    hol = pd.read_csv(
+        DATA / "holidays_events.csv",
+        parse_dates=["date"]
+    )
     oil["dcoilwtico"] = oil["dcoilwtico"].ffill().bfill()
-    hol = pd.read_csv("holidays_events.csv", parse_dates=["date"])
-    holiday_set = set(hol["date"].dt.date)
-    df = df.merge(stores, on="store_nbr", how="left")
-    df = df.merge(oil, on="date", how="left")
-    df["dcoilwtico"] = df["dcoilwtico"].ffill().bfill()
-    df["is_holiday"] = df["date"].dt.date.isin(holiday_set).map({True:"Holiday", False:"Non-Holiday"})
-    df["day_of_week"]   = df["date"].dt.day_name()
-    df["week_day_num"]  = df["date"].dt.dayofweek        
-    df["month"]         = df["date"].dt.month
-    df["month_name"]    = df["date"].dt.strftime("%b")
-    df["year"]          = df["date"].dt.year
-    df["quarter"]       = df["date"].dt.quarter
-    df["yw"]            = df["date"].dt.to_period("W").dt.start_time  
     return df, oil, hol, stores
 
 df_all, oil_raw, hol_raw, stores_meta = load_all()
