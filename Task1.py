@@ -157,6 +157,10 @@ def load_all():
     stores = pd.read_csv(DATA / "stores.csv")
     oil = pd.read_csv(DATA / "oil.csv", parse_dates=["date"])
     hol = pd.read_csv(DATA / "holidays_events.csv", parse_dates=["date"])
+    oil["dcoilwtico"] = (
+        oil["dcoilwtico"]
+        .ffill()
+        .bfill()
     return df, oil, hol, stores
 
 df_all, oil_raw, hol_raw, stores_meta = load_all()
