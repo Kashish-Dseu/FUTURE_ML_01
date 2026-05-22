@@ -197,7 +197,7 @@ def load_all():
     )
     return df, oil, hol, stores
 
-df_all, oil_raw, hol_raw, stores_meta = load_all()
+df, oil, hol, stores = load_all()
 
 
 # FORECAST MODEL  
