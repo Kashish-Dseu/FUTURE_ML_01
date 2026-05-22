@@ -10,7 +10,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler as SS
-
+from pathlib import Path
 
 # PAGE CONFIGRATION
 st.set_page_config(
@@ -148,17 +148,15 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 """, unsafe_allow_html=True)
 
 # LOAD DATA   
-from pathlib import Path
-
 @st.cache_data(show_spinner=False)
+def load_all():
+    BASE = Path(__file__).parent
+    DATA = BASE / "data"
 
-BASE = Path(__file__).parent
-DATA = BASE / "data"
-
-df = pd.read_csv(DATA / "train.csv", parse_dates=["date"])
-stores = pd.read_csv(DATA / "stores.csv")
-oil = pd.read_csv(DATA / "oil.csv", parse_dates=["date"])
-hol = pd.read_csv(DATA / "holidays_events.csv", parse_dates=["date"])
+    df = pd.read_csv(DATA / "train.csv", parse_dates=["date"])
+    stores = pd.read_csv(DATA / "stores.csv")
+    oil = pd.read_csv(DATA / "oil.csv", parse_dates=["date"])
+    hol = pd.read_csv(DATA / "holidays_events.csv", parse_dates=["date"])
     return df, oil, hol, stores
 
 df_all, oil_raw, hol_raw, stores_meta = load_all()
