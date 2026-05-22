@@ -152,15 +152,49 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 def load_all():
     BASE = Path(__file__).parent
     DATA = BASE / "data"
-
-    df = pd.read_csv(DATA / "train.csv", parse_dates=["date"])
+    df = pd.read_csv(
+        DATA / "train.csv",
+        parse_dates=["date"]
+    )
     stores = pd.read_csv(DATA / "stores.csv")
-    oil = pd.read_csv(DATA / "oil.csv", parse_dates=["date"])
-    hol = pd.read_csv(DATA / "holidays_events.csv", parse_dates=["date"])
+    oil = pd.read_csv(
+        DATA / "oil.csv",
+        parse_dates=["date"]
+    )
+    hol = pd.read_csv(
+        DATA / "holidays_events.csv",
+        parse_dates=["date"]
+    )
     oil["dcoilwtico"] = (
         oil["dcoilwtico"]
         .ffill()
-        .bfill())
+        .bfill()
+    )
+    df = df.merge(
+        stores,
+        on="store_nbr",
+        how="left"
+    )
+    holiday_dates = set(
+        hol[
+            hol["transferred"] == False
+        ]["date"]
+    )
+    df["is_holiday"] = np.where(
+        df["date"].isin(holiday_dates),
+        "Holiday",
+        "Non-Holiday"
+    )
+    df["day_of_week"] = df["date"].dt.day_name()
+
+    df["month"] = (
+        df["date"]
+        .dt.month
+    )
+    df["year"] = (
+        df["date"]
+        .dt.year
+    )
     return df, oil, hol, stores
 
 df_all, oil_raw, hol_raw, stores_meta = load_all()
