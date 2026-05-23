@@ -52,6 +52,91 @@ FUTURE_ML_01/
 - ✅ Visualization of Trends & Insights
 - ✅ Business-oriented ML Solutions
 
+# 🔄 Project Workflow
+
+```text
+                 ┌────────────────────┐
+                 │   Data Collection  │
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │   Data Cleaning    │
+                 │ Remove null values │
+                 │ Handle duplicates  │
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │ Exploratory Data   │
+                 │ Analysis (EDA)     │
+                 │ Charts & Insights  │
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │ Feature Engineering│
+                 │ Data Transformation│
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │ Model Building     │
+                 │ ML/Forecast Models │
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │ Model Evaluation   │
+                 │ Accuracy Metrics   │
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │ Prediction &       │
+                 │ Forecasting        │
+                 └─────────┬──────────┘
+                           ↓
+                 ┌────────────────────┐
+                 │ Visualization &    │
+                 │ Business Insights  │
+                 └────────────────────┘
+```
+
+---
+
+# ⚙️ Workflow Steps
+
+### 1️⃣ Data Collection
+- Import datasets from CSV/Excel sources
+- Gather structured business data
+
+### 2️⃣ Data Cleaning
+- Handle missing values
+- Remove duplicate records
+- Fix inconsistent data types
+
+### 3️⃣ Exploratory Data Analysis (EDA)
+- Analyze trends and patterns
+- Create graphs and visual reports
+- Identify correlations
+
+### 4️⃣ Feature Engineering
+- Transform raw data into useful features
+- Encode categorical variables
+- Scale numerical values
+
+### 5️⃣ Model Building
+- Train Machine Learning models
+- Apply forecasting algorithms
+- Optimize performance
+
+### 6️⃣ Model Evaluation
+- Measure accuracy and error metrics
+- Compare model performance
+
+### 7️⃣ Prediction & Forecasting
+- Generate future predictions
+- Forecast trends and outcomes
+
+### 8️⃣ Business Insights
+- Convert predictions into actionable insights
+- Support business decision-making
+
 ---
 
 # 📂 Project Structure
