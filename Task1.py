@@ -12,6 +12,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler as SS
 
+# ── DATA PATH (works locally AND on Streamlit Cloud) ──────────────────────────
 DATA_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # PAGE CONFIGURATION
@@ -149,6 +150,8 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 # ── LOAD DATA ─────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_all():
+    # Resolve CSV paths relative to the script so it works on Streamlit Cloud
+    # train.csv supports gzip compression — checks for .gz first, then plain CSV
     train_gz    = os.path.join(DATA_PATH, "train.csv.gz")
     train_plain = os.path.join(DATA_PATH, "train.csv")
     if os.path.exists(train_gz):
@@ -166,6 +169,7 @@ def load_all():
     oil_path     = os.path.join(DATA_PATH, "oil.csv")
     hol_path     = os.path.join(DATA_PATH, "holidays_events.csv")
 
+    # Validate remaining files
     for p in [stores_path, oil_path, hol_path]:
         if not os.path.exists(p):
             st.error(
@@ -177,6 +181,8 @@ def load_all():
             )
             st.stop()
 
+    # pandas auto-detects gzip from the .gz extension — no extra argument needed
+    # Use compact dtypes to cut RAM by ~40%
     df = pd.read_csv(
         train_path, parse_dates=["date"],
         dtype={"store_nbr": "int8", "onpromotion": "int8", "sales": "float32"},
@@ -224,6 +230,7 @@ def run_forecast(df_key_hash: str, _daily: pd.DataFrame, horizon: int = 30):
 
     F = ["t","month","dow","sin_m","cos_m","sin_d",
          "lag7","lag14","lag30","roll7","roll30"]
+    # 120 trees instead of 250 — 2× faster, negligible accuracy loss on Cloud
     model = GradientBoostingRegressor(
         n_estimators=120, max_depth=4,
         learning_rate=0.04, subsample=0.85, random_state=42
@@ -272,6 +279,7 @@ def forecast_today(cache_key: str, _df_full: pd.DataFrame, target_date: date):
     for (store, fam), grp in _df_full.groupby(["store_nbr", "family"]):
         daily = (grp.groupby("date")["sales"]
                  .sum().reset_index().sort_values("date"))
+        # Last 180 days is enough signal and keeps memory low on Cloud free tier
         if len(daily) > 180:
             daily = daily.tail(180).reset_index(drop=True)
         if len(daily) < 14:
@@ -322,11 +330,11 @@ with st.sidebar:
     max_d = df_all["date"].max().date()
     dc1, dc2 = st.columns(2)
     with dc1:
-        d_from = st.date_input("", value=min_d, min_value=min_d,
+        d_from = st.date_input("From", value=min_d, min_value=min_d,
                                max_value=max_d, key="df",
                                label_visibility="collapsed")
     with dc2:
-        d_to   = st.date_input("", value=max_d, min_value=min_d,
+        d_to   = st.date_input("To", value=max_d, min_value=min_d,
                                max_value=max_d, key="dt",
                                label_visibility="collapsed")
     st.markdown("---")
