@@ -150,13 +150,7 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 # LOAD DATA   
 @st.cache_data(show_spinner=False)
 def load_all():
-    DATA_PATH = 'train.csv'
-    if not os.path.exists(DATA_PATH):
-        st.error(f"Data file not found: {DATA_PATH}")
-        st.stop()
-
-    df = pd.read_csv(DATA_PATH, parse_dates=["date"])
-    df = df.fillna(' ')
+    df = pd.read_csv("train.csv", parse_dates=["date"], index=False, compression='gzip')
     stores = pd.read_csv("stores.csv")
     oil = pd.read_csv("oil.csv", parse_dates=["date"])
     oil["dcoilwtico"] = oil["dcoilwtico"].ffill().bfill()
