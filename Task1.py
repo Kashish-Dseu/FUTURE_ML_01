@@ -12,7 +12,6 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler as SS
 
-# ── DATA PATH (works locally AND on Streamlit Cloud) ──────────────────────────
 DATA_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # PAGE CONFIGURATION
@@ -150,8 +149,6 @@ div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
 # ── LOAD DATA ─────────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def load_all():
-    # Resolve CSV paths relative to the script so it works on Streamlit Cloud
-    # train.csv supports gzip compression — checks for .gz first, then plain CSV
     train_gz    = os.path.join(DATA_PATH, "train.csv.gz")
     train_plain = os.path.join(DATA_PATH, "train.csv")
     if os.path.exists(train_gz):
@@ -169,7 +166,6 @@ def load_all():
     oil_path     = os.path.join(DATA_PATH, "oil.csv")
     hol_path     = os.path.join(DATA_PATH, "holidays_events.csv")
 
-    # Validate remaining files
     for p in [stores_path, oil_path, hol_path]:
         if not os.path.exists(p):
             st.error(
@@ -181,8 +177,6 @@ def load_all():
             )
             st.stop()
 
-    # pandas auto-detects gzip from the .gz extension — no extra argument needed
-    # Use compact dtypes to cut RAM by ~40%
     df = pd.read_csv(
         train_path, parse_dates=["date"],
         dtype={"store_nbr": "int8", "onpromotion": "int8", "sales": "float32"},
