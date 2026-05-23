@@ -51,3 +51,17 @@ FUTURE_ML_01/
 - ✅ Forecasting & Predictive Modeling
 - ✅ Visualization of Trends & Insights
 - ✅ Business-oriented ML Solutions
+
+---
+
+# 📂 Project Structure
+
+```bash
+FUTURE_ML_01/
+│
+├── datasets/                 # Dataset files
+├── notebooks/                # Jupyter notebooks
+├── outputs/                  # Generated results & visualizations
+├── requirements.txt          # Required dependencies
+├── README.md                 # Project documentation
+└── main.py                   # Main execution file (if applicable)
