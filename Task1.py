@@ -35,10 +35,11 @@ PURPLE_L  = "#c084fc"
 GREEN     = "#10b981"
 RED       = "#ef4444"
 GOLD      = "#f5c842"
-GRAY_TXT  = "#6b7280"
+GRAY_TXT  = "#9fb3d8" 
 DARK_TXT  = "#111827"
-BG_CHART  = "white"
-GRID      = "#f3f4f6"
+BG_CHART  = "rgba(0,0,0,0)" 
+GRID      = "#2a4070"        
+CHART_TXT = "#e2e8f0"        
 
 # CSS STYLES
 st.markdown(f"""
@@ -91,13 +92,15 @@ section[data-testid="stSidebar"] label {{
 
 /* ── KPI cards ── */
 .kpi-wrap {{
-    background: white;
+    background: #1a2f5e;
     border-radius: 14px;
-    padding: 15px 14px 12px;
+    padding: 20px 14px 16px;
     display: flex;
-    align-items: flex-start;
-    gap: 13px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    flex-direction: column;     /* Stacks elements vertically */
+    align-items: center;        /* Centers everything horizontally */
+    text-align: center;         /* Centers the inner multi-line text blocks */
+    gap: 10px;                  /* Clean spacing between the icon and text block */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
     height: 100%;
     border-top: 3px solid transparent;
 }}
@@ -107,21 +110,22 @@ section[data-testid="stSidebar"] label {{
     display: flex; align-items: center; justify-content: center;
     font-size: 20px; flex-shrink: 0;
 }}
-.kpi-lbl  {{ font-size:10.5px; font-weight:700; color:{GRAY_TXT};
+.kpi-lbl  {{ font-size:10.5px; font-weight:700; color:#9fb3d8;
              text-transform:uppercase; letter-spacing:.5px; line-height:1.2; }}
-.kpi-sub  {{ font-size:9.5px; color:#9ca3af; margin-top:1px; }}
-.kpi-val  {{ font-size:23px; font-weight:800; color:{DARK_TXT};
-             line-height:1.1; margin:3px 0 2px; }}
-.delta-up   {{ font-size:11px; color:{GREEN}; font-weight:600; }}
-.delta-down {{ font-size:11px; color:{RED};   font-weight:600; }}
-.delta-flat {{ font-size:11px; color:{GRAY_TXT}; font-weight:600; }}
+.kpi-sub  {{ font-size:9.5px; color:#9ca3af; margin-top:2px; }}
+.kpi-val  {{ font-size:23px; font-weight:800; color:white;
+             line-height:1.1; margin:6px 0 4px; }} /* Cleaned margins for vertical symmetry */
+.delta-up   {{ font-size:11px; color:#10b981; font-weight:600; }}
+.delta-down {{ font-size:11px; color:#ef4444; font-weight:600; }}
+.delta-flat {{ font-size:11px; color:#9fb3d8; font-weight:600; }}
 
 /* ── section header ── */
 .shdr {{
     font-size:12.5px; font-weight:800; color:{GOLD};
     text-transform:uppercase; letter-spacing:.6px;
-    border-bottom:2.5px solid {GRID};
-    padding-bottom:5px; margin-bottom:7px;
+    border-bottom:2.5px solid {BORDER};
+    padding-bottom:5px; margin-bottom:12px;
+    margin-top: 10px;
 }}
 
 /* ── insights bar ── */
@@ -130,7 +134,7 @@ section[data-testid="stSidebar"] label {{
     border-radius: 12px;
     padding: 14px 22px;
     display: flex; align-items: flex-start; gap: 15px;
-    margin-top: 12px;
+    margin-top: 15px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.22);
 }}
 .ins-hdr  {{ color:{GOLD}; font-weight:800; font-size:12px;
@@ -141,7 +145,7 @@ section[data-testid="stSidebar"] label {{
 /* ── misc ── */
 #MainMenu {{visibility:hidden;}} footer {{visibility:hidden;}}
 .stDeployButton {{display:none;}}
-div[data-testid="stVerticalBlock"] > div {{gap:0.55rem;}}
+div[data-testid="stVerticalBlock"] > div {{gap:0.7rem;}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -224,7 +228,6 @@ def run_forecast(df_key_hash: str, _daily: pd.DataFrame, horizon: int = 30):
 
     F = ["t","month","dow","sin_m","cos_m","sin_d",
          "lag7","lag14","lag30","roll7","roll30"]
-    # 120 trees instead of 250 — 2× faster, negligible accuracy loss on Cloud
     model = GradientBoostingRegressor(
         n_estimators=120, max_depth=4,
         learning_rate=0.04, subsample=0.85, random_state=42
@@ -273,7 +276,6 @@ def forecast_today(cache_key: str, _df_full: pd.DataFrame, target_date: date):
     for (store, fam), grp in _df_full.groupby(["store_nbr", "family"]):
         daily = (grp.groupby("date")["sales"]
                  .sum().reset_index().sort_values("date"))
-        # Last 180 days is enough signal and keeps memory low on Cloud free tier
         if len(daily) > 180:
             daily = daily.tail(180).reset_index(drop=True)
         if len(daily) < 14:
@@ -399,7 +401,6 @@ def fmt(v):
 
 TODAY     = date.today()
 today_str = TODAY.strftime("%A, %d %b %Y")
-# Cache key includes date so it auto-refreshes daily without manual reboot
 today_cache_key = f"today_{TODAY.isoformat()}"
 today_df = forecast_today(today_cache_key, df_all, TODAY)
 
@@ -453,7 +454,7 @@ def kpi_card(icon, bg_color, border_color, label, sublabel,
     sub = f'<div class="kpi-sub">{sublabel}</div>' if sublabel else ""
     return f"""
     <div class="kpi-wrap" style="border-top-color:{border_color};">
-      <div class="kpi-icon" style="background:{bg_color};">{icon}</div>
+      <div class="kpi-icon" style="background:{bg_color}; color:{DARK_TXT};">{icon}</div>
       <div>
         <div class="kpi-lbl">{label}</div>{sub}
         <div class="kpi-val">{value}</div>
@@ -510,59 +511,60 @@ with k6:
 st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
 
-# ── ROW 2: Trend & Forecast  |  Sales by Store ───────────────────────────────
-r2a, r2b = st.columns([2.85, 1.4])
+# ── ROW 2: Trend & Forecast (Wide Vertical Extension) ───────────────────────
+st.markdown('<div class="shdr">SALES TREND &amp; FORECAST</div>',
+            unsafe_allow_html=True)
+hw = (hist_fc.set_index("date")["sales"]
+      .resample("W").sum().reset_index())
+fw = (fc_df.set_index("date")["sales"]
+      .resample("W").sum().reset_index())
+fw["lo"] = fw["sales"] * 0.90
+fw["hi"] = fw["sales"] * 1.10
 
-with r2a:
-    st.markdown('<div class="shdr">SALES TREND &amp; FORECAST</div>',
-                unsafe_allow_html=True)
-    hw = (hist_fc.set_index("date")["sales"]
-          .resample("W").sum().reset_index())
-    fw = (fc_df.set_index("date")["sales"]
-          .resample("W").sum().reset_index())
-    fw["lo"] = fw["sales"] * 0.90
-    fw["hi"] = fw["sales"] * 1.10
+fig1 = go.Figure()
+fig1.add_trace(go.Scatter(
+    x=hw["date"], y=hw["sales"],
+    name="Actual Sales", mode="lines",
+    line=dict(color=BLUE_L, width=2.2),
+    fill="tozeroy", fillcolor="rgba(59,130,246,0.07)",
+    hovertemplate="%{x|%b %d %Y}<br>Sales: $%{y:,.0f}<extra></extra>",
+))
+fig1.add_trace(go.Scatter(
+    x=pd.concat([fw["date"], fw["date"][::-1]]),
+    y=pd.concat([fw["hi"],   fw["lo"][::-1]]),
+    fill="toself", fillcolor="rgba(249,115,22,0.12)",
+    line=dict(color="rgba(0,0,0,0)"),
+    name="Confidence Band", hoverinfo="skip",
+))
+fig1.add_trace(go.Scatter(
+    x=fw["date"], y=fw["sales"],
+    name="Forecast Sales", mode="lines",
+    line=dict(color=ORANGE, width=2.5),
+    hovertemplate="%{x|%b %d %Y}<br>Forecast: $%{y:,.0f}<extra></extra>",
+))
+fig1.add_vline(
+    x=hw["date"].max(), line_dash="dash",
+    line_color="#9ca3af", line_width=1.5,
+)
+fig1.update_layout(
+    height=320, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+    margin=dict(l=0, r=10, t=6, b=0),
+    font=dict(color=CHART_TXT),
+    legend=dict(orientation="h", x=0, y=1.12,
+                font=dict(size=10.5, color=CHART_TXT), bgcolor="rgba(0,0,0,0)"),
+    xaxis=dict(showgrid=False, tickfont=dict(size=10, color=CHART_TXT)),
+    yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
+               tickfont=dict(size=10, color=CHART_TXT), zeroline=False),
+    hovermode="x unified",
+)
+st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
-    fig1 = go.Figure()
-    fig1.add_trace(go.Scatter(
-        x=hw["date"], y=hw["sales"],
-        name="Actual Sales", mode="lines",
-        line=dict(color=BLUE, width=2.2),
-        fill="tozeroy", fillcolor="rgba(29,78,216,0.07)",
-        hovertemplate="%{x|%b %d %Y}<br>Sales: $%{y:,.0f}<extra></extra>",
-    ))
-    fig1.add_trace(go.Scatter(
-        x=pd.concat([fw["date"], fw["date"][::-1]]),
-        y=pd.concat([fw["hi"],   fw["lo"][::-1]]),
-        fill="toself", fillcolor="rgba(249,115,22,0.12)",
-        line=dict(color="rgba(0,0,0,0)"),
-        name="Confidence Band", hoverinfo="skip",
-    ))
-    fig1.add_trace(go.Scatter(
-        x=fw["date"], y=fw["sales"],
-        name="Forecast Sales", mode="lines",
-        line=dict(color=ORANGE, width=2.5),
-        hovertemplate="%{x|%b %d %Y}<br>Forecast: $%{y:,.0f}<extra></extra>",
-    ))
-    fig1.add_vline(
-        x=hw["date"].max(), line_dash="dash",
-        line_color="#9ca3af", line_width=1.5,
-    )
-    fig1.update_layout(
-        height=300, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-        margin=dict(l=0, r=10, t=6, b=0),
-        legend=dict(orientation="h", x=0, y=1.12,
-                    font=dict(size=10.5), bgcolor="rgba(0,0,0,0)"),
-        xaxis=dict(showgrid=False, tickfont=dict(size=10)),
-        yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
-                   tickfont=dict(size=10), zeroline=False),
-        hovermode="x unified",
-    )
-    st.plotly_chart(fig1, use_container_width=True,
-                    config={"displayModeBar": False})
 
-with r2b:
-    st.markdown('<div class="shdr">SALES BY STORE</div>',
+# ── ROW 3: Core Analytical Breakdown Grid (2x2 Re-layout) ───────────────────
+grid_r1_c1, grid_r1_c2 = st.columns(2)
+
+with grid_r1_c1:
+    st.markdown('<div class="shdr">SALES BY STORE (TOP 10)</div>',
                 unsafe_allow_html=True)
     sb = (df.groupby("store_nbr")["sales"].sum()
           .sort_values(ascending=False).head(10).reset_index())
@@ -572,32 +574,25 @@ with r2b:
         orientation="h",
         marker=dict(
             color=sb["sales"][::-1].values,
-            colorscale=[[0,"#93c5fd"],[1,BLUE]],
+            colorscale=[[0,"#3b82f6"],[1,BLUE_L]],
             showscale=False,
         ),
         text=[fmt(v) for v in sb["sales"][::-1]],
         textposition="outside",
-        textfont=dict(size=9, color="#374151"),
+        textfont=dict(size=9.5, color=CHART_TXT),
         hovertemplate="%{y}<br>Sales: $%{x:,.0f}<extra></extra>",
     ))
     fig2.update_layout(
-        height=300, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
         margin=dict(l=0, r=68, t=6, b=0),
-        xaxis=dict(showgrid=False, showticklabels=False,
-                   showline=False, zeroline=False),
-        yaxis=dict(tickfont=dict(size=10), showgrid=False),
-        bargap=0.32,
+        font=dict(color=CHART_TXT),
+        xaxis=dict(showgrid=False, showticklabels=False, showline=False, zeroline=False),
+        yaxis=dict(tickfont=dict(size=10, color=CHART_TXT), showgrid=False),
+        bargap=0.25,
     )
-    st.plotly_chart(fig2, use_container_width=True,
-                    config={"displayModeBar": False})
+    st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
-st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
-
-# ── ROW 3: 4 equal-width charts ───────────────────────────────────────────────
-c1, c2, c3, c4 = st.columns([1.35, 1.1, 0.88, 1.2])
-
-with c1:
+with grid_r1_c2:
     st.markdown('<div class="shdr">SALES BY PRODUCT FAMILY</div>',
                 unsafe_allow_html=True)
     fam_df = (df.groupby("family")["sales"].sum()
@@ -611,24 +606,26 @@ with c1:
         ),
         text=[fmt(v) for v in fam_df["sales"][::-1]],
         textposition="outside",
-        textfont=dict(size=8.5, color="#374151"),
+        textfont=dict(size=9, color=CHART_TXT),
         hovertemplate="%{y}<br>$%{x:,.0f}<extra></extra>",
     ))
     fig3.update_layout(
-        height=285, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
         margin=dict(l=0, r=72, t=4, b=0),
+        font=dict(color=CHART_TXT),
         xaxis=dict(showgrid=False, showticklabels=False, showline=False),
-        yaxis=dict(tickfont=dict(size=9), showgrid=False),
-        bargap=0.28,
+        yaxis=dict(tickfont=dict(size=9.5, color=CHART_TXT), showgrid=False),
+        bargap=0.25,
     )
-    st.plotly_chart(fig3, use_container_width=True,
-                    config={"displayModeBar": False})
+    st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
-with c2:
+
+grid_r2_c1, grid_r2_c2 = st.columns(2)
+
+with grid_r2_c1:
     st.markdown('<div class="shdr">SALES BY DAY OF WEEK</div>',
                 unsafe_allow_html=True)
-    DOW_ORDER = ["Monday","Tuesday","Wednesday",
-                 "Thursday","Friday","Saturday","Sunday"]
+    DOW_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     dow_df = (df.groupby("day_of_week")["sales"]
               .sum().reindex(DOW_ORDER).reset_index())
     fig4 = go.Figure(go.Bar(
@@ -639,51 +636,21 @@ with c2:
         ),
         text=[fmt(v) if pd.notna(v) else "" for v in dow_df["sales"]],
         textposition="outside",
-        textfont=dict(size=8, color="#374151"),
+        textfont=dict(size=9, color=CHART_TXT),
         hovertemplate="%{x}<br>$%{y:,.0f}<extra></extra>",
     ))
     fig4.update_layout(
-        height=285, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
         margin=dict(l=0, r=10, t=4, b=0),
-        xaxis=dict(tickangle=-40, tickfont=dict(size=9), showgrid=False),
+        font=dict(color=CHART_TXT),
+        xaxis=dict(tickangle=0, tickfont=dict(size=10, color=CHART_TXT), showgrid=False),
         yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
-                   tickfont=dict(size=8.5), showline=False),
-        bargap=0.22,
+                   tickfont=dict(size=9, color=CHART_TXT), showline=False),
+        bargap=0.3,
     )
-    st.plotly_chart(fig4, use_container_width=True,
-                    config={"displayModeBar": False})
+    st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
 
-with c3:
-    st.markdown('<div class="shdr">SALES BY HOLIDAY</div>',
-                unsafe_allow_html=True)
-    hg        = df.groupby("is_holiday")["sales"].sum().reset_index()
-    total_hg  = hg["sales"].sum()
-    hol_share = (hg.loc[hg["is_holiday"]=="Holiday","sales"].sum() /
-                 (total_hg + 1e-9) * 100)
-    fig5 = go.Figure(go.Pie(
-        labels=hg["is_holiday"], values=hg["sales"],
-        hole=0.56,
-        marker=dict(colors=[ORANGE, BLUE],
-                    line=dict(color="white", width=2)),
-        textinfo="percent+label",
-        textfont=dict(size=10),
-        insidetextorientation="radial",
-        hovertemplate="%{label}<br>$%{value:,.0f} (%{percent})<extra></extra>",
-    ))
-    fig5.update_layout(
-        height=285, paper_bgcolor=BG_CHART,
-        margin=dict(l=0, r=0, t=4, b=0),
-        showlegend=False,
-        annotations=[dict(
-            text=f"<b>{hol_share:.0f}%</b><br>Holiday",
-            x=0.5, y=0.5, showarrow=False,
-            font=dict(size=12, color=DARK_TXT),
-        )],
-    )
-    st.plotly_chart(fig5, use_container_width=True,
-                    config={"displayModeBar": False})
-
-with c4:
+with grid_r2_c2:
     st.markdown('<div class="shdr">SALES VS OIL PRICE</div>',
                 unsafe_allow_html=True)
     oil_join = (daily_sales
@@ -697,103 +664,138 @@ with c4:
     fig6.add_trace(go.Scatter(
         x=oil_join["date"], y=oil_join["sales"],
         name="Sales", mode="lines",
-        line=dict(color=BLUE, width=1.9),
+        line=dict(color=BLUE_L, width=2.1),
         hovertemplate="%{x|%b %Y}<br>Sales: $%{y:,.0f}<extra></extra>",
     ), secondary_y=False)
     fig6.add_trace(go.Scatter(
         x=oil_join["date"], y=oil_join["dcoilwtico"],
         name="Oil (WTI)", mode="lines",
-        line=dict(color=ORANGE, width=1.9),
+        line=dict(color=ORANGE, width=2.1),
         hovertemplate="%{x|%b %Y}<br>Oil: $%{y:.2f}<extra></extra>",
     ), secondary_y=True)
     fig6.update_layout(
-        height=285, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-        margin=dict(l=0, r=0, t=20, b=0),
+        height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        margin=dict(l=0, r=10, t=20, b=0),
+        font=dict(color=CHART_TXT),
         legend=dict(orientation="h", x=0, y=1.14,
-                    font=dict(size=9), bgcolor="rgba(0,0,0,0)"),
-        xaxis=dict(showgrid=False, tickfont=dict(size=8.5)),
+                    font=dict(size=10, color=CHART_TXT), bgcolor="rgba(0,0,0,0)"),
+        xaxis=dict(showgrid=False, tickfont=dict(size=9.5, color=CHART_TXT)),
         hovermode="x unified",
     )
     fig6.update_yaxes(tickformat="$,.0f", gridcolor=GRID,
-                      tickfont=dict(size=8), secondary_y=False)
+                      tickfont=dict(size=9, color=CHART_TXT), secondary_y=False)
     fig6.update_yaxes(tickprefix="$", tickformat=".0f",
-                      tickfont=dict(size=8),
+                      tickfont=dict(size=9, color=CHART_TXT),
                       gridcolor="rgba(0,0,0,0)", secondary_y=True)
-    st.plotly_chart(fig6, use_container_width=True,
-                    config={"displayModeBar": False})
-
-st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+    st.plotly_chart(fig6, use_container_width=True, config={"displayModeBar": False})
 
 
-# ── ROW 4: Heatmap | Promo Impact | Store-Type ────────────────────────────────
-r4a, r4b, r4c = st.columns([1.3, 1.3, 1.2])
+# ── ROW 4: Context Dynamics (Holiday Share & Heatmap Side-by-Side) ───────────
+context_c1, context_c2 = st.columns([1.1, 1.9])
 
-with r4a:
+with context_c1:
+    st.markdown('<div class="shdr">SALES BY HOLIDAY SHARE</div>',
+                unsafe_allow_html=True)
+    hg        = df.groupby("is_holiday")["sales"].sum().reset_index()
+    total_hg  = hg["sales"].sum()
+    hol_share = (hg.loc[hg["is_holiday"]=="Holiday","sales"].sum() / (total_hg + 1e-9) * 100)
+    fig5 = go.Figure(go.Pie(
+        labels=hg["is_holiday"], values=hg["sales"],
+        hole=0.58,
+        marker=dict(colors=[ORANGE, BLUE_L], line=dict(color=NAVY_CARD, width=2)),
+        textinfo="percent+label",
+        textfont=dict(size=10.5, color=CHART_TXT),
+        insidetextorientation="radial",
+        hovertemplate="%{label}<br>$%{value:,.0f} (%{percent})<extra></extra>",
+    ))
+    fig5.update_layout(
+        height=240, paper_bgcolor=BG_CHART,
+        margin=dict(l=0, r=0, t=10, b=0),
+        showlegend=False,
+        font=dict(color=CHART_TXT),
+        annotations=[dict(
+            text=f"<b>{hol_share:.0f}%</b><br>Holiday",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=13, color=CHART_TXT),
+        )],
+    )
+    st.plotly_chart(fig5, use_container_width=True, config={"displayModeBar": False})
+
+with context_c2:
     st.markdown('<div class="shdr">MONTHLY SALES HEATMAP</div>',
                 unsafe_allow_html=True)
     hm       = df.groupby(["year","month"])["sales"].sum().reset_index()
-    hm_pivot = hm.pivot(index="year", columns="month",
-                        values="sales").fillna(0)
-    months_lbl = ["Jan","Feb","Mar","Apr","May","Jun",
-                  "Jul","Aug","Sep","Oct","Nov","Dec"]
+    hm_pivot = hm.pivot(index="year", columns="month", values="sales").fillna(0)
+    months_lbl = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     col_labels  = [months_lbl[m-1] for m in hm_pivot.columns]
     fig7 = go.Figure(go.Heatmap(
         z=hm_pivot.values, x=col_labels,
         y=[str(y) for y in hm_pivot.index],
-        colorscale=[[0,"#dbeafe"],[0.5,"#3b82f6"],[1,"#1e3a8a"]],
+        colorscale=[[0,NAVY_CARD],[0.5,BLUE_L],[1,GOLD]],
         text=[[fmt(v) for v in row] for row in hm_pivot.values],
-        texttemplate="%{text}", textfont=dict(size=9),
+        texttemplate="%{text}", textfont=dict(size=9.5, color=CHART_TXT),
         hovertemplate="Year %{y}, %{x}<br>Sales: $%{z:,.0f}<extra></extra>",
         showscale=False,
     ))
     fig7.update_layout(
-        height=220, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-        margin=dict(l=0, r=0, t=4, b=0),
-        xaxis=dict(tickfont=dict(size=10), side="bottom"),
-        yaxis=dict(tickfont=dict(size=10)),
+        height=240, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        margin=dict(l=0, r=0, t=10, b=0),
+        font=dict(color=CHART_TXT),
+        xaxis=dict(tickfont=dict(size=10, color=CHART_TXT), side="bottom"),
+        yaxis=dict(tickfont=dict(size=10, color=CHART_TXT)),
     )
-    st.plotly_chart(fig7, use_container_width=True,
-                    config={"displayModeBar": False})
+    st.plotly_chart(fig7, use_container_width=True, config={"displayModeBar": False})
 
-with r4b:
-    st.markdown('<div class="shdr">PROMOTION IMPACT BY FAMILY</div>',
+
+# ── ROW 5: Operational Performance (Promo Impact & Store Type Structure) ────
+op_c1, op_c2 = st.columns(2)
+
+with op_c1:
+    st.markdown('<div class="shdr">PROMOTION IMPACT BY PRODUCT FAMILY</div>',
                 unsafe_allow_html=True)
     promo_df = (df.groupby(["family","onpromotion"])["sales"]
                 .mean().reset_index())
-    promo_df["promo_label"] = promo_df["onpromotion"].map(
-        {0: "No Promo", 1: "On Promo"})
+    promo_df["promo_label"] = promo_df["onpromotion"].map({0: "No Promo", 1: "On Promo"})
+    
+    # Sort by total average sales to keep the horizontal chart structured cleanly
+    family_order = promo_df.groupby("family")["sales"].sum().sort_values(ascending=True).index
+    
     fig8 = go.Figure()
-    for lbl, color in [("No Promo", GRAY_TXT), ("On Promo", GREEN)]:
+    for lbl, color in [("No Promo", "#9ca3af"), ("On Promo", GREEN)]:
         sub = promo_df[promo_df["promo_label"] == lbl]
-        sub = sub.sort_values("sales", ascending=False).head(8)
+        # Align data to the unified sorted family order
+        sub = sub.set_index("family").reindex(family_order).reset_index()
+        
         fig8.add_trace(go.Bar(
-            name=lbl, x=sub["family"], y=sub["sales"],
+            name=lbl, 
+            y=sub["family"],   # Family on Y-axis
+            x=sub["sales"],    # Sales on X-axis
+            orientation="h",   # Horizontal bars
             marker_color=color,
-            text=[fmt(v) for v in sub["sales"]],
+            text=[fmt(v) if v > 0 else "" for v in sub["sales"]],
             textposition="outside",
-            textfont=dict(size=7.5),
+            textfont=dict(size=8.5, color=CHART_TXT),
         ))
     fig8.update_layout(
-        height=220, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-        margin=dict(l=0, r=0, t=4, b=0),
+        height=380, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        margin=dict(l=10, r=60, t=4, b=20), # Rebalanced margins for left text reading space
+        font=dict(color=CHART_TXT),
         barmode="group", bargap=0.2, bargroupgap=0.05,
-        legend=dict(orientation="h", x=0, y=1.15,
-                    font=dict(size=9), bgcolor="rgba(0,0,0,0)"),
-        xaxis=dict(tickangle=-30, tickfont=dict(size=8.5), showgrid=False),
-        yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
-                   tickfont=dict(size=8.5)),
+        legend=dict(orientation="h", x=0, y=1.12,
+                    font=dict(size=10, color=CHART_TXT), bgcolor="rgba(0,0,0,0)"),
+        xaxis=dict(showgrid=False, showticklabels=False, showline=False, zeroline=False), # Clean up X grid lines
+        yaxis=dict(tickfont=dict(size=10, color=CHART_TXT), showgrid=False),
     )
-    st.plotly_chart(fig8, use_container_width=True,
-                    config={"displayModeBar": False})
+    st.plotly_chart(fig8, use_container_width=True, config={"displayModeBar": False})
 
-with r4c:
+with op_c2:
     st.markdown('<div class="shdr">SALES BY STORE TYPE &amp; CITY</div>',
                 unsafe_allow_html=True)
     sc = (df.groupby(["city","type"])["sales"].sum()
           .reset_index().sort_values("sales", ascending=False))
     fig9 = px.bar(
         sc, x="city", y="sales", color="type",
-        color_discrete_sequence=[BLUE, TEAL, PURPLE, ORANGE],
+        color_discrete_sequence=[BLUE_L, TEAL, PURPLE, ORANGE],
         labels={"sales":"Sales","city":"City","type":"Store Type"},
     )
     fig9.update_traces(
@@ -801,39 +803,44 @@ with r4c:
         hovertemplate="%{x} (Type %{legendgroup})<br>$%{y:,.0f}<extra></extra>",
     )
     fig9.update_layout(
-        height=220, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-        margin=dict(l=0, r=0, t=4, b=0),
+        height=340, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        # CRITICAL FIX: b=100 allocates 100 pixels of crisp, empty space at the bottom 
+        # for the tilted labels so they never run outside the container or clip.
+        margin=dict(l=40, r=10, t=10, b=100), 
+        font=dict(color=CHART_TXT),
         legend=dict(title="Type", orientation="h", x=0, y=1.15,
-                    font=dict(size=9), bgcolor="rgba(0,0,0,0)"),
-        xaxis=dict(tickangle=-20, tickfont=dict(size=9), showgrid=False),
-        yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
-                   tickfont=dict(size=8.5)),
+                    font=dict(size=10, color=CHART_TXT), bgcolor="rgba(0,0,0,0)"),
+        # Elegant -45 degree angle combined with clean text size prevents overlap
+        xaxis=dict(
+            tickangle=-45, 
+            tickfont=dict(size=10, color=CHART_TXT), 
+            showgrid=False
+        ),
+        yaxis=dict(tickformat="$,.0f", gridcolor=GRID, tickfont=dict(size=9, color=CHART_TXT)),
         bargap=0.25,
     )
-    st.plotly_chart(fig9, use_container_width=True,
-                    config={"displayModeBar": False})
+    # Ensure it expands beautifully to fill its Streamlit column structure
+    st.plotly_chart(fig9, use_container_width=True, config={"displayModeBar": False})
 
 
 # ── TODAY'S SALES FORECAST SECTION ───────────────────────────────────────────
-st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
 today_dir = "📈" if today_vs_last7 >= 0 else "📉"
 today_cls = GREEN if today_vs_last7 >= 0 else RED
-vs_label  = (f"↑ {abs(today_vs_last7):.1f}% vs 7-day avg"
-             if today_vs_last7 >= 0
-             else f"↓ {abs(today_vs_last7):.1f}% vs 7-day avg")
+vs_label  = (f"↑ {abs(today_vs_last7):.1f}% vs 7-day avg" if today_vs_last7 >= 0 else f"↓ {abs(today_vs_last7):.1f}% vs 7-day avg")
 
 st.markdown(f"""
 <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0d3b5e 50%,#163060 100%);
-            border-radius:14px;padding:18px 28px;margin-bottom:10px;
+            border-radius:14px;padding:18px 28px;margin-bottom:15px;
             border:1.5px solid {GOLD};
-            box-shadow:0 6px 20px rgba(0,0,0,0.3);">
+            box-shadow:0 6px 20px rgba(0,0,0,0.3); ">
   <div style="display:flex;align-items:center;justify-content:space-between;
               flex-wrap:wrap;gap:14px;">
     <div style="display:flex;align-items:center;gap:14px;">
       <div style="width:52px;height:52px;border-radius:50%;
                   background:linear-gradient(135deg,{GOLD},{ORANGE});
                   display:flex;align-items:center;justify-content:center;
-                  font-size:24px;box-shadow:0 0 18px rgba(245,200,66,.45);">⚡</div>
+                  font-size:24px;box-shadow:0 0 18px rgba(245,200,66,.45); color:{DARK_TXT}">⚡</div>
       <div>
         <div style="color:{GOLD};font-size:11px;font-weight:700;
                     text-transform:uppercase;letter-spacing:1px;">
@@ -871,132 +878,122 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-ta, tb, tc = st.columns([1.2, 1.2, 1.6])
+# Spreading Today's charts horizontally into balanced pairs or full vertical paths
+t_row1_c1, t_row1_c2 = st.columns(2)
 
-with ta:
-    st.markdown('<div class="shdr">TODAY — BY STORE</div>',
-                unsafe_allow_html=True)
+with t_row1_c1:
+    st.markdown('<div class="shdr">TODAY — BY STORE</div>', unsafe_allow_html=True)
     if len(today_df) > 0:
         ts = (today_df.groupby("store_nbr")["pred_sales"]
               .sum().sort_values(ascending=True).reset_index())
         ts["label"] = "Store " + ts["store_nbr"].astype(str)
-        ts["color"] = [GOLD if s == today_best_store else BLUE
-                       for s in ts["store_nbr"]]
+        ts["color"] = [GOLD if s == today_best_store else BLUE_L for s in ts["store_nbr"]]
         fig_ta = go.Figure(go.Bar(
             y=ts["label"], x=ts["pred_sales"],
-            orientation="h",
-            marker_color=ts["color"],
+            orientation="h", marker_color=ts["color"],
             text=[fmt(v) for v in ts["pred_sales"]],
-            textposition="outside",
-            textfont=dict(size=9, color="#374151"),
+            textposition="outside", textfont=dict(size=9.5, color=CHART_TXT),
             hovertemplate="Store %{y}<br>Today Forecast: $%{x:,.0f}<extra></extra>",
         ))
         fig_ta.update_layout(
             height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-            margin=dict(l=0, r=70, t=4, b=0),
+            margin=dict(l=0, r=70, t=4, b=0), font=dict(color=CHART_TXT),
             xaxis=dict(showgrid=False, showticklabels=False, showline=False),
-            yaxis=dict(tickfont=dict(size=10), showgrid=False),
-            bargap=0.28,
+            yaxis=dict(tickfont=dict(size=10, color=CHART_TXT), showgrid=False),
+            bargap=0.25,
         )
-        st.plotly_chart(fig_ta, use_container_width=True,
-                        config={"displayModeBar": False})
+        st.plotly_chart(fig_ta, use_container_width=True, config={"displayModeBar": False})
     else:
         st.info("No data for selected filters.")
 
-with tb:
-    st.markdown('<div class="shdr">TODAY — BY FAMILY</div>',
-                unsafe_allow_html=True)
+with t_row1_c2:
+    st.markdown('<div class="shdr">TODAY — BY FAMILY</div>', unsafe_allow_html=True)
     if len(today_df) > 0:
         tf = (today_df.groupby("family")["pred_sales"]
               .sum().sort_values(ascending=True).reset_index())
-        tf["color"] = [GOLD if f == today_best_fam else PURPLE
-                       for f in tf["family"]]
+        tf["color"] = [GOLD if f == today_best_fam else PURPLE for f in tf["family"]]
         fig_tb = go.Figure(go.Bar(
             y=tf["family"], x=tf["pred_sales"],
-            orientation="h",
-            marker_color=tf["color"],
+            orientation="h", marker_color=tf["color"],
             text=[fmt(v) for v in tf["pred_sales"]],
-            textposition="outside",
-            textfont=dict(size=9, color="#374151"),
+            textposition="outside", textfont=dict(size=9.5, color=CHART_TXT),
             hovertemplate="%{y}<br>Today Forecast: $%{x:,.0f}<extra></extra>",
         ))
         fig_tb.update_layout(
             height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-            margin=dict(l=0, r=70, t=4, b=0),
+            margin=dict(l=0, r=70, t=4, b=0), font=dict(color=CHART_TXT),
             xaxis=dict(showgrid=False, showticklabels=False, showline=False),
-            yaxis=dict(tickfont=dict(size=9.5), showgrid=False),
-            bargap=0.28,
+            yaxis=dict(tickfont=dict(size=10, color=CHART_TXT), showgrid=False),
+            bargap=0.25,
         )
-        st.plotly_chart(fig_tb, use_container_width=True,
-                        config={"displayModeBar": False})
+        st.plotly_chart(fig_tb, use_container_width=True, config={"displayModeBar": False})
     else:
         st.info("No data for selected filters.")
 
-with tc:
-    st.markdown('<div class="shdr">TODAY — STORE PERFORMANCE vs 7-DAY AVG</div>',
-                unsafe_allow_html=True)
-    if len(today_df) > 0:
-        perf = (today_df.groupby("store_nbr")
-                .agg(pred_sales=("pred_sales","sum"),
-                     vs_last7_pct=("vs_last7_pct","mean"),
-                     city=("city","first"),
-                     store_type=("store_type","first"))
-                .reset_index()
-                .sort_values("pred_sales", ascending=False))
-        fig_tc = go.Figure()
-        fig_tc.add_trace(go.Bar(
-            name="Today's Forecast",
-            x=["Store "+str(s) for s in perf["store_nbr"]],
-            y=perf["pred_sales"],
-            marker_color=[GREEN if v >= 0 else RED
-                          for v in perf["vs_last7_pct"]],
-            text=[f"{v:+.1f}%" for v in perf["vs_last7_pct"]],
-            textposition="outside",
-            textfont=dict(size=9,
-                          color=[GREEN if v >= 0 else RED
-                                 for v in perf["vs_last7_pct"]]),
-            hovertemplate=(
-                "%{x}<br>"
-                "Forecast: $%{y:,.0f}<br>"
-                "vs 7-day avg: %{text}<extra></extra>"
-            ),
-        ))
-        fig_tc.update_layout(
-            height=280, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
-            margin=dict(l=0, r=10, t=4, b=0),
-            xaxis=dict(tickangle=-30, tickfont=dict(size=9.5), showgrid=False),
-            yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
-                       tickfont=dict(size=8.5)),
-            showlegend=False, bargap=0.3,
-        )
-        st.plotly_chart(fig_tc, use_container_width=True,
-                        config={"displayModeBar": False})
 
-        perf_show = perf[["store_nbr","city","store_type",
-                           "pred_sales","vs_last7_pct"]].copy()
-        perf_show.columns = ["Store","City","Type",
-                              "Today Forecast","vs 7-Day Avg %"]
-        perf_show["Today Forecast"] = perf_show["Today Forecast"].apply(fmt)
-        perf_show["vs 7-Day Avg %"] = perf_show["vs 7-Day Avg %"].apply(
-            lambda x: f"↑ {x:.1f}%" if x >= 0 else f"↓ {abs(x):.1f}%")
-        perf_show["Store"] = "Store " + perf_show["Store"].astype(str)
-        st.dataframe(perf_show, use_container_width=True, hide_index=True)
-    else:
-        st.info("No data for selected filters.")
+st.markdown('<div class="shdr">TODAY — STORE PERFORMANCE vs 7-DAY AVG</div>',
+            unsafe_allow_html=True)
+if len(today_df) > 0:
+    perf = (today_df.groupby("store_nbr")
+            .agg(pred_sales=("pred_sales","sum"),
+                 vs_last7_pct=("vs_last7_pct","mean"),
+                 city=("city","first"),
+                 store_type=("store_type","first"))
+            .reset_index()
+            .sort_values("pred_sales", ascending=False))
+    fig_tc = go.Figure()
+    fig_tc.add_trace(go.Bar(
+        name="Today's Forecast",
+        x=["Store "+str(s) for s in perf["store_nbr"]],
+        y=perf["pred_sales"],
+        marker_color=[GREEN if v >= 0 else RED for v in perf["vs_last7_pct"]],
+        text=[f"{v:+.1f}%" for v in perf["vs_last7_pct"]],
+        textposition="outside",
+        textfont=dict(size=9.5, color=[GREEN if v >= 0 else RED for v in perf["vs_last7_pct"]]),
+        hovertemplate=(
+            "%{x}<br>"
+            "Forecast: $%{y:,.0f}<br>"
+            "vs 7-day avg: %{text}<extra></extra>"
+        ),
+    ))
+    n_stores = len(perf)
+    tick_size = 9 if n_stores > 30 else 10
+    chart_height = max(300, 260 + max(0, n_stores - 20) * 3)
+    fig_tc.update_layout(
+        height=chart_height, paper_bgcolor=BG_CHART, plot_bgcolor=BG_CHART,
+        margin=dict(l=0, r=10, t=4, b=max(80, 60 + n_stores)),
+        font=dict(color=CHART_TXT),
+        xaxis=dict(
+            tickangle=-45,
+            tickfont=dict(size=tick_size, color=CHART_TXT),
+            showgrid=False,
+            automargin=True,
+        ),
+        yaxis=dict(tickformat="$,.0f", gridcolor=GRID, tickfont=dict(size=9, color=CHART_TXT)),
+        showlegend=False, bargap=0.35,
+    )
+    st.plotly_chart(fig_tc, use_container_width=True, config={"displayModeBar": False})
+
+    perf_show = perf[["store_nbr","city","store_type","pred_sales","vs_last7_pct"]].copy()
+    perf_show.columns = ["Store","City","Type","Today Forecast","vs 7-Day Avg %"]
+    perf_show["Today Forecast"] = perf_show["Today Forecast"].apply(fmt)
+    perf_show["vs 7-Day Avg %"] = perf_show["vs 7-Day Avg %"].apply(
+        lambda x: f"↑ {x:.1f}%" if x >= 0 else f"↓ {abs(x):.1f}%")
+    perf_show["Store"] = "Store " + perf_show["Store"].astype(str)
+    st.dataframe(perf_show, use_container_width=True, hide_index=True)
+else:
+    st.info("No data for selected filters.")
 
 st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
 
 # ── INSIGHTS BAR ──────────────────────────────────────────────────────────────
-best_fam   = (df.groupby("family")["sales"].sum().idxmax()
-              if len(df) > 0 else "N/A")
-best_store = ("Store " + str(int(df.groupby("store_nbr")["sales"]
-              .sum().idxmax()))) if len(df) > 0 else "N/A"
+best_fam   = (df.groupby("family")["sales"].sum().idxmax() if len(df) > 0 else "N/A")
+best_store = ("Store " + str(int(df.groupby("store_nbr")["sales"].sum().idxmax()))) if len(df) > 0 else "N/A"
 hol_sales  = df[df["is_holiday"]=="Holiday"]["sales"].sum()
 nhol_sales = df[df["is_holiday"]=="Non-Holiday"]["sales"].sum()
 hol_uplift = (hol_sales / (hol_sales + nhol_sales + 1e-9)) * 100
-promo_uplift = (df[df["onpromotion"]==1]["sales"].mean() /
-                (df[df["onpromotion"]==0]["sales"].mean() + 1e-9) - 1) * 100
+promo_uplift = (df[df["onpromotion"]==1]["sales"].mean() / (df[df["onpromotion"]==0]["sales"].mean() + 1e-9) - 1) * 100
 
 st.markdown(f"""
 <div class="ins-bar">
