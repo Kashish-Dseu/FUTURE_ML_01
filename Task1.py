@@ -564,7 +564,7 @@ with r2a:
                    tickfont=dict(size=10), zeroline=False),
         hovermode="x unified",
     )
-    st.plotly_chart(fig1, use_container_width=True,
+    st.plotly_chart(fig1, width="stretch",
                     config={"displayModeBar": False})
 
 with r2b:
@@ -594,7 +594,7 @@ with r2b:
         yaxis=dict(tickfont=dict(size=10), showgrid=False),
         bargap=0.32,
     )
-    st.plotly_chart(fig2, use_container_width=True,
+    st.plotly_chart(fig2, width="stretch",
                     config={"displayModeBar": False})
 
 st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
@@ -627,7 +627,7 @@ with c1:
         yaxis=dict(tickfont=dict(size=9), showgrid=False),
         bargap=0.28,
     )
-    st.plotly_chart(fig3, use_container_width=True,
+    st.plotly_chart(fig3, width="stretch",
                     config={"displayModeBar": False})
 
 with c2:
@@ -656,7 +656,7 @@ with c2:
                    tickfont=dict(size=8.5), showline=False),
         bargap=0.22,
     )
-    st.plotly_chart(fig4, use_container_width=True,
+    st.plotly_chart(fig4, width="stretch",
                     config={"displayModeBar": False})
 
 with c3:
@@ -686,7 +686,7 @@ with c3:
             font=dict(size=12, color=DARK_TXT),
         )],
     )
-    st.plotly_chart(fig5, use_container_width=True,
+    st.plotly_chart(fig5, width="stretch",
                     config={"displayModeBar": False})
 
 with c4:
@@ -725,7 +725,7 @@ with c4:
     fig6.update_yaxes(tickprefix="$", tickformat=".0f",
                       tickfont=dict(size=8),
                       gridcolor="rgba(0,0,0,0)", secondary_y=True)
-    st.plotly_chart(fig6, use_container_width=True,
+    st.plotly_chart(fig6, width="stretch",
                     config={"displayModeBar": False})
 
 st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
@@ -758,7 +758,7 @@ with r4a:
         xaxis=dict(tickfont=dict(size=10), side="bottom"),
         yaxis=dict(tickfont=dict(size=10)),
     )
-    st.plotly_chart(fig7, use_container_width=True,
+    st.plotly_chart(fig7, width="stretch",
                     config={"displayModeBar": False})
 
 with r4b:
@@ -789,7 +789,7 @@ with r4b:
         yaxis=dict(tickformat="$,.0f", gridcolor=GRID,
                    tickfont=dict(size=8.5)),
     )
-    st.plotly_chart(fig8, use_container_width=True,
+    st.plotly_chart(fig8, width="stretch",
                     config={"displayModeBar": False})
 
 with r4c:
@@ -816,7 +816,7 @@ with r4c:
                    tickfont=dict(size=8.5)),
         bargap=0.25,
     )
-    st.plotly_chart(fig9, use_container_width=True,
+    st.plotly_chart(fig9, width="stretch",
                     config={"displayModeBar": False})
 
 
@@ -904,7 +904,7 @@ with ta:
             yaxis=dict(tickfont=dict(size=10), showgrid=False),
             bargap=0.28,
         )
-        st.plotly_chart(fig_ta, use_container_width=True,
+        st.plotly_chart(fig_ta, width="stretch",
                         config={"displayModeBar": False})
     else:
         st.info("No data for selected filters.")
@@ -933,7 +933,7 @@ with tb:
             yaxis=dict(tickfont=dict(size=9.5), showgrid=False),
             bargap=0.28,
         )
-        st.plotly_chart(fig_tb, use_container_width=True,
+        st.plotly_chart(fig_tb, width="stretch",
                         config={"displayModeBar": False})
     else:
         st.info("No data for selected filters.")
@@ -975,7 +975,7 @@ with tc:
                        tickfont=dict(size=8.5)),
             showlegend=False, bargap=0.3,
         )
-        st.plotly_chart(fig_tc, use_container_width=True,
+        st.plotly_chart(fig_tc, width="stretch",
                         config={"displayModeBar": False})
 
         perf_show = perf[["store_nbr","city","store_type",
@@ -986,7 +986,7 @@ with tc:
         perf_show["vs 7-Day Avg %"] = perf_show["vs 7-Day Avg %"].apply(
             lambda x: f"↑ {x:.1f}%" if x >= 0 else f"↓ {abs(x):.1f}%")
         perf_show["Store"] = "Store " + perf_show["Store"].astype(str)
-        st.dataframe(perf_show, use_container_width=True, hide_index=True)
+        st.dataframe(perf_show, width="stretch", hide_index=True)
     else:
         st.info("No data for selected filters.")
 
