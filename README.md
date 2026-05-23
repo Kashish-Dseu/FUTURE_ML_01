@@ -46,8 +46,8 @@ FUTURE_ML_01/
 
 # 📊 Features
 
-✅ Data Cleaning & Preprocessing
-✅ Exploratory Data Analysis (EDA)
-✅ Forecasting & Predictive Modeling
-✅ Visualization of Trends & Insights
-✅ Business-oriented ML Solutions
+- ✅ Data Cleaning & Preprocessing
+- ✅ Exploratory Data Analysis (EDA)
+- ✅ Forecasting & Predictive Modeling
+- ✅ Visualization of Trends & Insights
+- ✅ Business-oriented ML Solutions
