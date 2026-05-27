@@ -36,12 +36,15 @@ The goal is to build scalable and accurate predictive systems for real-world dat
 ```
 FUTURE_ML_01/
 │
-├── datasets/                 # Dataset files
-├── notebooks/                # Jupyter notebooks
-├── outputs/                  # Generated results & visualizations
-├── requirements.txt          # Required dependencies
-├── README.md                 # Project documentation
-└── main.py                   # Main execution file (if applicable)
+├── Task1.py             
+├── train.csv               
+├── test.csv
+├── stores.csv
+├── oil.csv
+├── holidays_events.csv          
+├── requirements.txt         
+└── README.md                
+                  
 ```
 ----
 
