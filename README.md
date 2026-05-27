@@ -33,6 +33,7 @@ The goal is to build scalable and accurate predictive systems for real-world dat
 
 # 📂 Project Structure
 
+```
 FUTURE_ML_01/
 │
 ├── datasets/                 # Dataset files
@@ -41,7 +42,7 @@ FUTURE_ML_01/
 ├── requirements.txt          # Required dependencies
 ├── README.md                 # Project documentation
 └── main.py                   # Main execution file (if applicable)
-
+```
 ----
 
 # 📊 Features
